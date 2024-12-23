@@ -1,31 +1,38 @@
 "use client";
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Create a context with default values
-const UserContext = createContext();
+const UserContext = createContext(null);
 
 // Provider component
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // User details are stored in state
+  const [user, setUser] = useState(null);
 
   // On initial render, check if user details exist in local storage
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser)); // Parse and set the user state
+    if (typeof window !== "undefined") { // Ensure this code runs on the client
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
     }
   }, []);
 
   // Function to update user details
   const loginUser = (userDetails) => {
     setUser(userDetails);
-    localStorage.setItem("user", JSON.stringify(userDetails)); // Save user to local storage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user", JSON.stringify(userDetails));
+    }
   };
 
   // Function to clear user details (e.g., on logout)
   const logoutUser = () => {
     setUser(null);
-    localStorage.removeItem("user"); // Remove user from local storage
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
+    }
   };
 
   return (
@@ -39,12 +46,8 @@ export const UserProvider = ({ children }) => {
 export const useUser = () => {
   const context = useContext(UserContext);
 
-  // If the user is not in the context, check local storage
-  if (!context.user) {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      context.user = JSON.parse(storedUser); // Update context with the user from local storage
-    }
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
   }
 
   return context;

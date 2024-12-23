@@ -18,7 +18,6 @@ const ProfilePage = () => {
   
   const logoutUser = () => {
     setUser(null);
-    localStorage.removeItem("user");
   };
 
   if (!user) {
