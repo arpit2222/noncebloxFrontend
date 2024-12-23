@@ -8,7 +8,7 @@ import { useUser } from "@/context/UserContext";
 import { useFormik } from "formik";
 
 // Post component for individual post display
-const Post = ({ post, handleLike, handleDeleteComment }) => {
+const Post = ({ post, handleLike, handleDeleteComment, handleCounter }) => {
   const { user } = useUser();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false); // State to manage comments visibility
 
@@ -33,6 +33,7 @@ const Post = ({ post, handleLike, handleDeleteComment }) => {
   
           if (response.status === 200) {
             console.log("Comment added successfully.");
+            handleCounter(); // Trigger re-fetch of posts
             resetForm(); // Clear the comment input field after successful submission
           } else {
             console.error("Failed to add comment.");

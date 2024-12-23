@@ -12,6 +12,7 @@ const MainFeed = () => {
   const [newPostContent, setNewPostContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [operationTrigger, setOperationTrigger] = useState(0); // State to trigger re-fetch
   const { user } = useUser();
 
   // Handle like API call
@@ -28,6 +29,7 @@ const MainFeed = () => {
       );
       if (response.status === 200) {
         console.log("Likes updated successfully.");
+        setOperationTrigger((prev) => prev + 1); // Trigger useEffect
       } else {
         console.error("Failed to update likes.");
       }
@@ -49,6 +51,7 @@ const MainFeed = () => {
       );
       if (response.status === 200) {
         console.log("Comment deleted successfully.");
+        setOperationTrigger((prev) => prev + 1); // Trigger useEffect
       } else {
         console.error("Failed to delete comment.");
       }
@@ -59,35 +62,28 @@ const MainFeed = () => {
 
   const handleNewPostSubmit = async () => {
     if (newPostTitle.trim() && newPostContent.trim()) {
-      const user = JSON.parse(localStorage.getItem("user"));
-
-      if (!user?.token) {
-        alert("You must be logged in to create a post.");
-        return;
-      }
-
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/api/posts`,
           {
             title: newPostTitle,
             content: newPostContent,
-            author: user.id,
-            authorName: user.username,
+            author: user?.id,
+            authorName: user?.username,
           },
           {
             headers: {
-              Authorization: `Bearer ${user.token}`,
+              Authorization: `Bearer ${user?.token}`,
             },
           }
         );
 
         if (response.status === 201) {
-          const newPost = response.data;
-          setPosts((prevPosts) => [newPost, ...prevPosts]); // Add the new post to the top of the list
+          console.log("Post created successfully.");
+          setOperationTrigger((prev) => prev + 1); // Trigger useEffect
           setNewPostTitle("");
           setNewPostContent("");
-          setIsModalOpen(false); // Close modal after submitting
+          setIsModalOpen(false);
         } else {
           alert("Failed to create post. Please try again.");
         }
@@ -100,27 +96,30 @@ const MainFeed = () => {
     }
   };
 
-    // Fetch posts data from the API
-    useEffect(() => {
-      const fetchPosts = async () => {
-        try {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/posts`
-          );
-          if (response.status === 200) {
-            setPosts(response.data);
-          } else {
-            console.error("Failed to fetch posts");
-          }
-        } catch (error) {
-          console.error("Error fetching posts:", error);
-        } finally {
-          setLoading(false);
+  // Fetch posts data from the API
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (operationTrigger < 1) {
+        setLoading(true);
+      }
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/posts`
+        );
+        if (response.status === 200) {
+          setPosts(response.data);
+        } else {
+          console.error("Failed to fetch posts");
         }
-      };
-  
-      fetchPosts();
-    }, [handleNewPostSubmit, handleLike, handleDeleteComment]);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [operationTrigger]); // Dependency to re-trigger fetchPosts
 
   return (
     <div className="main-feed p-4 bg-gray-200 w-[80%]">
@@ -169,23 +168,22 @@ const MainFeed = () => {
           </div>
         </div>
       )}
-{/* Posts */}
-<div className="w-[600px] mx-auto">
-  {loading ? (
-    <p>Loading posts...</p>
-  ) : (
-    posts.map((post,index) => (
-      <div key={index}> {/* Apply key directly to the wrapping div */}
-        <Post
-          post={post}
-          handleLike={handleLike}
-          handleDeleteComment={handleDeleteComment}
-        />
+      {/* Posts */}
+      <div className="w-[600px] mx-auto">
+        {loading ? (
+          <p>Loading posts...</p>
+        ) : (
+          posts.map((post) => (
+            <Post
+              key={post.id}
+              post={post}
+              handleLike={handleLike}
+              handleDeleteComment={handleDeleteComment}
+              handleCounter={() => setOperationTrigger((prev) => prev + 1)}
+            />
+          ))
+        )}
       </div>
-    ))
-  )}
-</div>
-
     </div>
   );
 };
