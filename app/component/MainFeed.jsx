@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Post from "./Post";
 import axios from "axios";
+import { useUser } from "@/context/UserContext";
 
 // Main Feed Component
 const MainFeed = () => {
@@ -11,28 +12,50 @@ const MainFeed = () => {
   const [newPostContent, setNewPostContent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { user } = useUser();
 
-  // Fetch posts data from the API
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/posts`
-        );
-        if (response.status === 200) {
-          setPosts(response.data);
-        } else {
-          console.error("Failed to fetch posts");
+  // Handle like API call
+  const handleLike = async (postId) => {
+    try {
+      const response = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/like`,
+        { userId: user?.id },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        setLoading(false);
+      );
+      if (response.status === 200) {
+        console.log("Likes updated successfully.");
+      } else {
+        console.error("Failed to update likes.");
       }
-    };
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    }
+  };
 
-    fetchPosts();
-  }, []);
+  // Handle delete comment API call
+  const handleDeleteComment = async (postId, commentId) => {
+    try {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/comment/${commentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+        console.log("Comment deleted successfully.");
+      } else {
+        console.error("Failed to delete comment.");
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
 
   const handleNewPostSubmit = async () => {
     if (newPostTitle.trim() && newPostContent.trim()) {
@@ -76,6 +99,28 @@ const MainFeed = () => {
       alert("Both title and content are required.");
     }
   };
+
+    // Fetch posts data from the API
+    useEffect(() => {
+      const fetchPosts = async () => {
+        try {
+          const response = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/posts`
+          );
+          if (response.status === 200) {
+            setPosts(response.data);
+          } else {
+            console.error("Failed to fetch posts");
+          }
+        } catch (error) {
+          console.error("Error fetching posts:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchPosts();
+    }, [handleNewPostSubmit, handleLike, handleDeleteComment]);
 
   return (
     <div className="main-feed p-4 bg-gray-200 w-[80%]">
@@ -133,6 +178,8 @@ const MainFeed = () => {
       <div key={index}> {/* Apply key directly to the wrapping div */}
         <Post
           post={post}
+          handleLike={handleLike}
+          handleDeleteComment={handleDeleteComment}
         />
       </div>
     ))

@@ -8,7 +8,7 @@ import { useUser } from "@/context/UserContext";
 import { useFormik } from "formik";
 
 // Post component for individual post display
-const Post = ({ post }) => {
+const Post = ({ post, handleLike, handleDeleteComment }) => {
   const { user } = useUser();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false); // State to manage comments visibility
 
@@ -44,48 +44,6 @@ const Post = ({ post }) => {
     },
   });
 
-  // Handle like API call
-  const handleLike = async (postId) => {
-    try {
-      const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/like`,
-        { userId: user?.id },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        }
-      );
-      if (response.status === 200) {
-        console.log("Likes updated successfully.");
-      } else {
-        console.error("Failed to update likes.");
-      }
-    } catch (error) {
-      console.error("Error updating likes:", error);
-    }
-  };
-
-  // Handle delete comment API call
-  const handleDeleteComment = async (postId, commentId) => {
-    try {
-      const response = await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/posts/${postId}/comment/${commentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.token}`,
-          },
-        }
-      );
-      if (response.status === 200) {
-        console.log("Comment deleted successfully.");
-      } else {
-        console.error("Failed to delete comment.");
-      }
-    } catch (error) {
-      console.error("Error deleting comment:", error);
-    }
-  };
 
   return (
     <div key={post.id} className="bg-white rounded-lg shadow-lg mb-4">
