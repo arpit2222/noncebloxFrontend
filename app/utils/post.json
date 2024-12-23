@@ -1,0 +1,32 @@
+[
+    {
+      "id": 1,
+      "content": "This is a sample post!",
+      "likes": [],
+      "comments": [
+        {
+          "id": 1,
+          "user": "John Doe",
+          "content": "Great post!"
+        },
+        {
+          "id": 2,
+          "user": "Jane Smith",
+          "content": "Thanks for sharing."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "content": "Another post content.",
+      "likes": [],
+      "comments": [
+        {
+          "id": 1,
+          "user": "Alice",
+          "content": "Nice post!"
+        }
+      ]
+    }
+  ]
+  
