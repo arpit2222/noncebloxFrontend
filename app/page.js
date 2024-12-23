@@ -30,9 +30,6 @@ export default function Home() {
         console.log("Login successful:", response.data);
         const userDetails = response.data; // Update this based on API response
       loginUser(userDetails);
-
-      // Store user data in localStorage for persistence
-      await localStorage.setItem("user", JSON.stringify(userDetails));
       
       navigate.replace("/posts");
        
